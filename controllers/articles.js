@@ -1,4 +1,7 @@
 const Article = require('../models/article');
+const NotFoundError = require('../errors/NotFounError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const { articleNotFound, deleteAnothersArticle } = require('../helpers/helpers').errorMessages;
 
 module.exports.createArticle = (req, res, next) => {
   const {
@@ -7,7 +10,7 @@ module.exports.createArticle = (req, res, next) => {
   Article.create({
     keyword, title, text, date, source, link, image, owener: req.user,
   })
-    .then((article) => res.send(article))
+    .then(() => res.status(201).end())
     .catch(next);
 };
 
@@ -21,10 +24,10 @@ module.exports.deleteArticle = (req, res, next) => {
   Article.findById(req.params.articleId).select('+owener')
     .then((article) => {
       if (!article) {
-        throw new Error();
+        throw new NotFoundError(articleNotFound);
       }
       if (String(article.owener) !== String(req.user._id)) {
-        throw new Error();
+        throw new ForbiddenError(deleteAnothersArticle);
       }
       return Article.findByIdAndRemove(req.params.articleId);
     })

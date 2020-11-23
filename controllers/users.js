@@ -1,16 +1,29 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const { sendToken } = require('../helpers/helpers');
+const BadReqestError = require('../errors/BadRequestError');
+const ConflictingRequestError = require('../errors/ConflictingRequestError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const { badPassword, emailInUse, badEmailOrPassword } = require('../helpers/helpers').errorMessages;
 
 module.exports.createUser = (req, res, next) => {
   const { name, email, password } = req.body;
-  // проверить пароль на пустоту
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, email, password: hash,
-    }))
-    .then((user) => sendToken(res, user._id))
-    .catch(next);
+  if (!password.match(/^[a-zA-Z0-9]{8,}$/)) {
+    next(new BadReqestError(badPassword));
+  } else {
+    bcrypt.hash(password, 10)
+      .then((hash) => User.create({
+        name, email, password: hash,
+      }))
+      .then((user) => sendToken(res, user._id))
+      .catch((err) => {
+        if (err.name === 'MongoError' && err.code === 11000) {
+          next(new ConflictingRequestError(emailInUse));
+        } else {
+          next(err);
+        }
+      });
+  }
 };
 
 module.exports.login = (req, res, next) => {
@@ -19,14 +32,14 @@ module.exports.login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new Error();
+        throw new UnauthorizedError(badEmailOrPassword);
       }
       userID = user._id;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        throw new Error();
+        throw new UnauthorizedError(badEmailOrPassword);
       }
       sendToken(res, userID);
     })
