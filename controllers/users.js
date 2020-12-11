@@ -1,10 +1,13 @@
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { sendToken } = require('../helpers/helpers');
 const BadReqestError = require('../errors/BadRequestError');
 const ConflictingRequestError = require('../errors/ConflictingRequestError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const { badPassword, emailInUse, badEmailOrPassword } = require('../helpers/helpers').errorMessages;
+
+const { JWT_SECRET } = require('../config');
 
 module.exports.createUser = (req, res, next) => {
   const { name, email, password } = req.body;
@@ -15,7 +18,7 @@ module.exports.createUser = (req, res, next) => {
       .then((hash) => User.create({
         name, email, password: hash,
       }))
-      .then((user) => sendToken(res, user._id))
+      .then((user) => res.status(201).send({ name: user.name, email: user.email }))
       .catch((err) => {
         if (err.name === 'MongoError' && err.code === 11000) {
           next(new ConflictingRequestError(emailInUse));
@@ -41,7 +44,16 @@ module.exports.login = (req, res, next) => {
       if (!matched) {
         throw new UnauthorizedError(badEmailOrPassword);
       }
-      sendToken(res, userID);
+
+      const token = jwt.sign({ _id: userID }, JWT_SECRET, { expiresIn: '7d' });
+
+      res
+        .cookie('jwt', token, {
+          maxAge: 3600000,
+          httpOnly: true,
+          sameSite: true,
+        })
+        .end();
     })
     .catch(next);
 };

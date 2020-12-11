@@ -10,7 +10,15 @@ module.exports.createArticle = (req, res, next) => {
   Article.create({
     keyword, title, text, date, source, link, image, owener: req.user,
   })
-    .then(() => res.status(201).end())
+    .then((article) => res.status(201).send({
+      keyword: article.keyword,
+      title: article.title,
+      text: article.text,
+      date: article.date,
+      source: article.source,
+      link: article.link,
+      image: article.image,
+    }))
     .catch(next);
 };
 
@@ -31,8 +39,14 @@ module.exports.deleteArticle = (req, res, next) => {
       }
       return Article.findByIdAndRemove(req.params.articleId);
     })
-    .then((article) => {
-      res.send({ message: article });
-    })
+    .then((article) => res.send({
+      keyword: article.keyword,
+      title: article.title,
+      text: article.text,
+      date: article.date,
+      source: article.source,
+      link: article.link,
+      image: article.image,
+    }))
     .catch(next);
 };
