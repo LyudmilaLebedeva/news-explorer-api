@@ -7,12 +7,21 @@ const { needAthorization } = require('../helpers/helpers').errorMessages;
 const { JWT_SECRET } = require('../config');
 
 module.exports = (req, res, next) => {
-  const token = req.cookies.jwt;
+  // const token = req.cookies.jwt;
 
-  if (!token) {
+  // if (!token) {
+  //   next(new UnauthorizedError(needAthorization));
+  //   return;
+  // }
+
+  const { authorization } = req.headers;
+
+  if (!authorization || !authorization.startsWith('Bearer ')) {
     next(new UnauthorizedError(needAthorization));
     return;
   }
+
+  const token = authorization.replace('Bearer ', '');
 
   let payload;
 

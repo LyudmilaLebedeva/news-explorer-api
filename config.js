@@ -3,7 +3,7 @@ require('dotenv').config();
 const { NODE_ENV, PORT = 3000 } = process.env;
 
 const DEV_MODE_CONSTANTS = {
-  DATABASE_URL: 'mongodb://localhost:27017/news-db',
+  DATABASE_URL: 'mongodb://localhost:27017/news-db-blblb',
   JWT_SECRET: 'blablabla',
 };
 

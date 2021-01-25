@@ -11,13 +11,7 @@ module.exports.createArticle = (req, res, next) => {
     keyword, title, text, date, source, link, image, owener: req.user,
   })
     .then((article) => res.status(201).send({
-      keyword: article.keyword,
-      title: article.title,
-      text: article.text,
-      date: article.date,
-      source: article.source,
-      link: article.link,
-      image: article.image,
+      id: article._id,
     }))
     .catch(next);
 };

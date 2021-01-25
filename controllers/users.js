@@ -47,13 +47,15 @@ module.exports.login = (req, res, next) => {
 
       const token = jwt.sign({ _id: userID }, JWT_SECRET, { expiresIn: '7d' });
 
-      res
-        .cookie('jwt', token, {
-          maxAge: 3600000,
-          httpOnly: true,
-          sameSite: true,
-        })
-        .end();
+      // res
+      //   .cookie('jwt', token, {
+      //     maxAge: 3600000,
+      //     httpOnly: true,
+      //     sameSite: false,
+      //   })
+      //   .end();
+
+      res.send({ token });
     })
     .catch(next);
 };
